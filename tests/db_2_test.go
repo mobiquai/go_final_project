@@ -24,10 +24,10 @@ func count(db *sqlx.DB) (int, error) {
 }
 
 func openDB(t *testing.T) *sqlx.DB {
-	dbfile := DBFile
+	dbfile := "." + DBFile
 	envFile := os.Getenv("TODO_DBFILE")
 	if len(envFile) > 0 {
-		dbfile = envFile
+		dbfile = "." + envFile
 	}
 	db, err := sqlx.Connect("sqlite3", dbfile)
 	assert.NoError(t, err)
