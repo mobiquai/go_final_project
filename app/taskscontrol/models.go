@@ -1,7 +1,5 @@
 package taskscontrol
 
-const dateLayout string = "20060102"
-
 type TaskIdResponse struct {
 	Id int `json:"id"`
 }

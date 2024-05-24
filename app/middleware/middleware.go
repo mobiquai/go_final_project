@@ -1,17 +1,31 @@
 package middleware
 
 import (
+	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
-	"os"
 
 	"github.com/golang-jwt/jwt"
+	"github.com/mobiquai/go_final_project/app/appsettings"
 )
+
+func responseWithErrorUnauthorized(w http.ResponseWriter, errorText string, err error) {
+	errorResponse := ErrorResponse{fmt.Errorf("%s: %w", errorText, err).Error()}
+
+	errorData, _ := json.Marshal(errorResponse)
+	w.WriteHeader(http.StatusUnauthorized)
+
+	_, err = w.Write(errorData)
+	if err != nil {
+		http.Error(w, fmt.Errorf("error: %w", err).Error(), http.StatusUnauthorized)
+	}
+
+}
 
 func Auth(next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		// смотрим наличие пароля в переменной окружения
-		pass := os.Getenv("TODO_PASSWORD")
+		pass := appsettings.EnvPassword // смотрим наличие пароля в переменной окружения
 
 		if len(pass) > 0 {
 			var jwtTokenString string // JWT-токен из куки
@@ -25,11 +39,12 @@ func Auth(next http.HandlerFunc) http.HandlerFunc {
 			jwtToken := jwt.New(jwt.SigningMethodHS256)
 			token, err := jwtToken.SignedString([]byte(pass))
 			if err != nil {
-				http.Error(w, fmt.Errorf("failed to sign jwt: %s", err).Error(), http.StatusUnauthorized)
+				responseWithErrorUnauthorized(w, "не удалось провести аутентификацию", fmt.Errorf("failed to sign jwt: %s", err))
+				return
 			}
 
 			if jwtTokenString != token {
-				http.Error(w, "Authentication required", http.StatusUnauthorized)
+				responseWithErrorUnauthorized(w, "требуется аутентификация", errors.New("authentication required"))
 				return
 			}
 

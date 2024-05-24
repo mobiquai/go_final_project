@@ -7,6 +7,7 @@ import (
 
 	"github.com/go-chi/chi/v5"
 
+	"github.com/mobiquai/go_final_project/app/appsettings"
 	"github.com/mobiquai/go_final_project/app/database"
 	"github.com/mobiquai/go_final_project/app/handler"
 	"github.com/mobiquai/go_final_project/app/middleware"
@@ -15,6 +16,8 @@ import (
 )
 
 func main() {
+	appsettings.GetEnvVariables()
+
 	database.InitiateDb()
 
 	r := chi.NewRouter()

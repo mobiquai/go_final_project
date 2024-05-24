@@ -6,8 +6,8 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"time"
 
+	"github.com/mobiquai/go_final_project/app/appsettings"
 	"github.com/mobiquai/go_final_project/tests"
 	_ "modernc.org/sqlite"
 )
@@ -40,17 +40,17 @@ func InitiateDb() {
 
 	//defer db.Close()
 
-	db.SetMaxIdleConns(2)                  // максимальное количество неактивных соединений — 2
-	db.SetMaxOpenConns(5)                  // максимальное общее количество открытых соединений (активных и неактивных) — 5
-	db.SetConnMaxIdleTime(time.Minute * 5) // максимальное время, в течение которого соединение может оставаться неактивным в пуле = 5 минутам
-	db.SetConnMaxLifetime(time.Hour)       // время жизни всех соединений = 1 час
+	db.SetMaxIdleConns(appsettings.MaxIdleConns)       // максимальное количество неактивных соединений — 2
+	db.SetMaxOpenConns(appsettings.MaxOpenConns)       // максимальное общее количество открытых соединений (активных и неактивных) — 5
+	db.SetConnMaxIdleTime(appsettings.MaxIdleTime)     // максимальное время, в течение которого соединение может оставаться неактивным в пуле = 5 минутам
+	db.SetConnMaxLifetime(appsettings.ConnMaxLifetime) // время жизни всех соединений = 1 час
 
 }
 
 func getDbFilePath() string {
 	dbFilePath := tests.DBFile
 
-	envDbFilePath := os.Getenv("TODO_DBFILE") // получаем значение переменной окружения
+	envDbFilePath := appsettings.EnvDbfile // получаем значение переменной окружения
 	if len(envDbFilePath) > 0 {
 		dbFilePath = envDbFilePath
 		log.Printf("Получен путь к файлу БД из переменной окружения TODO_DBFILE: %s", dbFilePath)
@@ -117,7 +117,8 @@ func AddTask(task Task) (int, error) {
 func TasksRead() ([]Task, error) {
 	var tasks []Task
 
-	rows, err := db.Query("SELECT * FROM scheduler ORDER BY date LIMIT 50")
+	rows, err := db.Query("SELECT * FROM scheduler ORDER BY date LIMIT :limit",
+		sql.Named("limit", appsettings.SelectRowsLimit))
 	if err != nil {
 		return []Task{}, err
 	}
@@ -147,8 +148,9 @@ func SearchTasks(search string) ([]Task, error) {
 	var tasks []Task
 
 	search = fmt.Sprintf("%%%s%%", search)
-	rows, err := db.Query("SELECT * FROM scheduler WHERE title LIKE :search OR comment LIKE :search ORDER BY date LIMIT 50",
-		sql.Named("search", search))
+	rows, err := db.Query("SELECT * FROM scheduler WHERE title LIKE :search OR comment LIKE :search ORDER BY date LIMIT :limit",
+		sql.Named("search", search),
+		sql.Named("limit", appsettings.SelectRowsLimit))
 	if err != nil {
 		return []Task{}, err
 	}
@@ -166,7 +168,7 @@ func SearchTasks(search string) ([]Task, error) {
 		return []Task{}, err
 	}
 
-	if tasks == nil {
+	if len(tasks) == 0 {
 		tasks = []Task{}
 	}
 
@@ -177,7 +179,9 @@ func SearchTasks(search string) ([]Task, error) {
 func SearchTasksByDate(date string) ([]Task, error) {
 	var tasks []Task
 
-	rows, err := db.Query("SELECT * FROM scheduler WHERE date = :date LIMIT 50", sql.Named("date", date))
+	rows, err := db.Query("SELECT * FROM scheduler WHERE date = :date LIMIT :limit",
+		sql.Named("date", date),
+		sql.Named("limit", appsettings.SelectRowsLimit))
 	if err != nil {
 		return []Task{}, err
 	}
@@ -208,7 +212,7 @@ func ReadTask(id string) (Task, error) {
 
 	row := db.QueryRow("SELECT * FROM scheduler WHERE id = :id", sql.Named("id", id))
 	if err := row.Scan(&task.Id, &task.Date, &task.Title, &task.Comment, &task.Repeat); err != nil {
-		return Task{}, err
+		return Task{}, errors.New("failed to read the task")
 	}
 
 	return task, nil
@@ -232,7 +236,7 @@ func UpdateTask(task Task) (Task, error) {
 	}
 
 	if rowsAffected == 0 {
-		return Task{}, errors.New("не удалось обновить задачу")
+		return Task{}, errors.New("failed to update the task")
 	}
 
 	return task, nil
@@ -251,7 +255,7 @@ func DeleteTask(id string) error {
 	}
 
 	if rowsAffected == 0 {
-		return errors.New("не удалось удалить задачу")
+		return errors.New("failed to delete the task")
 	}
 
 	return err

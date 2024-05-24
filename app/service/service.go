@@ -6,9 +6,9 @@ import (
 	"strconv"
 	"strings"
 	"time"
-)
 
-const layout string = "20060102"
+	"github.com/mobiquai/go_final_project/app/appsettings"
+)
 
 func NextDate(now time.Time, date string, repeat string) (string, error) {
 	if len(repeat) == 0 {
@@ -25,10 +25,10 @@ func NextDate(now time.Time, date string, repeat string) (string, error) {
 		}
 
 		if days > 400 {
-			return "", errors.New("максимальное количество дней должно быть меньше 400")
+			return "", errors.New("the maximum number of days cannot exceed 400")
 		}
 
-		parsedDate, err := time.Parse(layout, date)
+		parsedDate, err := time.Parse(appsettings.DateLayout, date)
 		if err != nil {
 			return "", err
 		}
@@ -39,10 +39,10 @@ func NextDate(now time.Time, date string, repeat string) (string, error) {
 			newDate = newDate.AddDate(0, 0, days)
 		}
 
-		return newDate.Format(layout), nil
+		return newDate.Format(appsettings.DateLayout), nil
 
 	} else if yearMatch {
-		parsedDate, err := time.Parse(layout, date)
+		parsedDate, err := time.Parse(appsettings.DateLayout, date)
 		if err != nil {
 			return "", err
 		}
@@ -53,10 +53,10 @@ func NextDate(now time.Time, date string, repeat string) (string, error) {
 			newDate = newDate.AddDate(1, 0, 0)
 		}
 
-		return newDate.Format(layout), nil
+		return newDate.Format(appsettings.DateLayout), nil
 
 	}
 
-	return "", errors.New("repeat имеет неправильный формат")
+	return "", errors.New("repeat has wrong format")
 
 }

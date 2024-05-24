@@ -3,13 +3,11 @@ package server
 import (
 	"log"
 	"net/http"
-	"os"
 	"strconv"
 
+	"github.com/mobiquai/go_final_project/app/appsettings"
 	"github.com/mobiquai/go_final_project/tests"
 )
-
-const host = "localhost"
 
 type Server struct {
 	httpServer *http.Server
@@ -29,7 +27,7 @@ func (serv *Server) Start(router http.Handler) error {
 
 func getAddr() string {
 	port := tests.Port
-	envPort := os.Getenv("TODO_PORT") // получаем значение переменной окружения
+	envPort := appsettings.EnvPort // получаем значение переменной окружения
 
 	if len(envPort) > 0 {
 		if eport, err := strconv.ParseInt(envPort, 10, 32); err == nil {
@@ -40,5 +38,5 @@ func getAddr() string {
 		log.Printf("Получен номер порта из файла settings.go: %d", port)
 	}
 
-	return host + ":" + strconv.Itoa(port)
+	return appsettings.HostName + ":" + strconv.Itoa(port)
 }
