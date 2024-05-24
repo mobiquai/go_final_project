@@ -10,18 +10,19 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/mobiquai/go_final_project/app/appsettings"
 	"github.com/stretchr/testify/assert"
 )
 
 func getURL(path string) string {
 	port := Port
-	envPort := os.Getenv("TODO_PORT")
+	envPort := appsettings.EnvPort // получаем значение переменной окружения
 	if len(envPort) > 0 {
 		if eport, err := strconv.ParseInt(envPort, 10, 32); err == nil {
 			port = int(eport)
 		}
 	}
-	path = strings.ReplaceAll(strings.TrimPrefix(path, `../web/`), `\`, `/`)
+	path = strings.ReplaceAll(strings.TrimPrefix(path, `..\web\`), `\`, `/`)
 	return fmt.Sprintf("http://localhost:%d/%s", port, path)
 }
 

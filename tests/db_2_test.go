@@ -1,12 +1,12 @@
 package tests
 
 import (
-	"os"
 	"testing"
 	"time"
 
 	"github.com/jmoiron/sqlx"
 	_ "github.com/mattn/go-sqlite3"
+	"github.com/mobiquai/go_final_project/app/appsettings"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -24,10 +24,10 @@ func count(db *sqlx.DB) (int, error) {
 }
 
 func openDB(t *testing.T) *sqlx.DB {
-	dbfile := DBFile
-	envFile := os.Getenv("TODO_DBFILE")
+	dbfile := "." + DBFile
+	envFile := appsettings.EnvDbfile // получаем значение переменной окружения
 	if len(envFile) > 0 {
-		dbfile = envFile
+		dbfile = "." + envFile
 	}
 	db, err := sqlx.Connect("sqlite3", dbfile)
 	assert.NoError(t, err)
